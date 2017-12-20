@@ -10,8 +10,8 @@ import (
 
 	"encoding/json"
 
-	"github.com/a-h/generate"
-	"github.com/a-h/generate/jsonschema"
+	"github.com/sqs/generate"
+	"github.com/sqs/generate/jsonschema"
 )
 
 var (

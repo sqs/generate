@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a-h/generate"
+	"github.com/sqs/generate"
 )
 
 func TestThatFieldNamesAreOrdered(t *testing.T) {
