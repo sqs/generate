@@ -13,7 +13,7 @@ type Schema struct {
 	SchemaType           string `json:"$schema"`
 	Title                string `json:"title"`
 	ID                   string `json:"id"`
-	Type                 string `json:"type"`
+	Type                 Type   `json:"type"`
 	Description          string `json:"description"`
 	Definitions          map[string]*Schema
 	Properties           map[string]*Schema
@@ -39,6 +39,80 @@ func Parse(schema string) (*Schema, error) {
 	}
 
 	return s, err
+}
+
+// Type represents a JSON Schema type, which can be a string or an array of strings.
+type Type []string
+
+var _ json.Unmarshaler = (*Type)(nil)
+
+func (t Type) MarshalJSON() ([]byte, error) {
+	if len(t) == 0 {
+		return nil, errors.New("Cannot marshal empty type")
+	}
+	if len(t) == 1 {
+		return json.Marshal(t[0])
+	}
+	return json.Marshal([]string(t))
+}
+
+func (t *Type) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("Cannot unmarshal JSON schema type from empty string")
+	}
+	if data[0] == '[' {
+		return json.Unmarshal(data, (*[]string)(t))
+	}
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*t = Type{s}
+	return nil
+}
+
+// Is returns true if the JSON Schema type exactly matches the argument.
+func (t Type) Is(v interface{}) bool {
+	switch v := v.(type) {
+	case string:
+		return len(t) == 1 && t[0] == v
+	case []string:
+		if len(v) != len(t) {
+			return false
+		}
+		vm := make(map[string]struct{})
+		for _, e := range v {
+			vm[e] = struct{}{}
+		}
+		if len(vm) != len(t) {
+			return false
+		}
+		for _, e := range t {
+			if _, in := vm[e]; !in {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+// Set sets the value of the JSON Schema type
+func (t *Type) Set(s ...string) {
+	*t = s
+}
+
+// Has returns true if the JSON Schema type includes the type specified by the argument.
+// For example, if the JSON Schema type is ["string", "null"] and the argument is "string",
+// this function returns true.
+func (t Type) Has(s string) bool {
+	for _, u := range t {
+		if u == s {
+			return true
+		}
+	}
+	return false
 }
 
 func (ap *AdditionalProperties) UnmarshalJSON(data []byte) error {
@@ -84,7 +158,7 @@ func (s *Schema) ExtractTypes() map[string]*Schema {
 }
 
 func addTypeAndChildrenToMap(path string, name string, s *Schema, types map[string]*Schema) {
-	if s.Type == "array" {
+	if s.Type.Is("array") {
 		arrayTypeName := s.ID
 
 		// If there's no ID, try the title instead.
@@ -120,7 +194,7 @@ func addTypeAndChildrenToMap(path string, name string, s *Schema, types map[stri
 		return
 	}
 
-	if len(s.Properties) > 0 || s.Type == "object" {
+	if len(s.Properties) > 0 || s.Type.Is("object") {
 		types[path+namePrefix] = s
 	}
 
