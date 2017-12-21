@@ -76,6 +76,23 @@ func (t Type) Is(v interface{}) bool {
 	switch v := v.(type) {
 	case string:
 		return len(t) == 1 && t[0] == v
+	case Type:
+		if len(v) != len(t) {
+			return false
+		}
+		vm := make(map[string]struct{})
+		for _, e := range v {
+			vm[e] = struct{}{}
+		}
+		if len(vm) != len(t) {
+			return false
+		}
+		for _, e := range t {
+			if _, in := vm[e]; !in {
+				return false
+			}
+		}
+		return true
 	case []string:
 		if len(v) != len(t) {
 			return false
