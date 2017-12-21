@@ -53,6 +53,9 @@ func TestThatPropertiesCanBeParsed(t *testing.T) {
             "name": {
                 "type": "string"
             },
+            "zip": {
+                "type": ["string", "null"]
+            },
             "address": {
                 "$ref": "#/definitions/address"
             },
@@ -78,6 +81,10 @@ func TestThatPropertiesCanBeParsed(t *testing.T) {
 		{
 			actual:   func() interface{} { return so.Properties["address"].Type },
 			expected: Type{},
+		},
+		{
+			actual:   func() interface{} { return so.Properties["zip"].Type },
+			expected: Type{"string", "null"},
 		},
 		{
 			actual:   func() interface{} { return so.Properties["address"].Reference },

@@ -90,12 +90,16 @@ func TestThatStructsAreNamedWell(t *testing.T) {
 
 func TestFieldGeneration(t *testing.T) {
 	properties := map[string]*jsonschema.Schema{
-		"property1": {Type: jsonschema.Type{"string"}},
-		"property2": {Reference: "#/definitions/address"},
-		"property3": {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"integer"}}}},
-		"property4": {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"integer"}}, {Type: jsonschema.Type{"integer"}}}},
-		"property5": {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"object"}, Properties: map[string]*jsonschema.Schema{"subproperty1": {Type: jsonschema.Type{"integer"}}}}}},
-		"property6": {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"object"}, Properties: map[string]*jsonschema.Schema{"subproperty1": {Type: jsonschema.Type{"integer"}}}}}},
+		"property1":  {Type: jsonschema.Type{"string"}},
+		"property2":  {Reference: "#/definitions/address"},
+		"property3":  {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"integer"}}}},
+		"property4":  {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"integer"}}, {Type: jsonschema.Type{"integer"}}}},
+		"property5":  {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"object"}, Properties: map[string]*jsonschema.Schema{"subproperty1": {Type: jsonschema.Type{"integer"}}}}}},
+		"property6":  {Type: jsonschema.Type{"object"}, AdditionalProperties: []*jsonschema.Schema{{Type: jsonschema.Type{"object"}, Properties: map[string]*jsonschema.Schema{"subproperty1": {Type: jsonschema.Type{"integer"}}}}}},
+		"property7":  {Type: jsonschema.Type{"integer", "null"}},
+		"property8":  {Type: jsonschema.Type{"number", "null"}},
+		"property9":  {Type: jsonschema.Type{"string", "null"}},
+		"property10": {Type: jsonschema.Type{"boolean", "null"}},
 	}
 
 	lookupTypes := map[string]*jsonschema.Schema{
@@ -110,8 +114,8 @@ func TestFieldGeneration(t *testing.T) {
 		t.Error("Failed to get the fields: ", err)
 	}
 
-	if len(result) != 6 {
-		t.Errorf("Expected 6 results, but got %d results", len(result))
+	if len(result) != 10 {
+		t.Errorf("Expected 10 results, but got %d results", len(result))
 	}
 
 	testField(result["Property1"], "property1", "Property1", "string", false, t)
@@ -120,6 +124,10 @@ func TestFieldGeneration(t *testing.T) {
 	testField(result["Property4"], "property4", "Property4", "map[string]interface{}", false, t)
 	testField(result["Property5"], "property5", "Property5", "map[string]*Property5", false, t)
 	testField(result["Property6"], "property6", "Property6", "map[string]*undefined", false, t)
+	testField(result["Property7"], "property7", "Property7", "*int", false, t)
+	testField(result["Property8"], "property8", "Property8", "*float64", false, t)
+	testField(result["Property9"], "property9", "Property9", "*string", false, t)
+	testField(result["Property10"], "property10", "Property10", "*bool", false, t)
 }
 
 func TestFieldGenerationWithArrayReferences(t *testing.T) {
