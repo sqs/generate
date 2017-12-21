@@ -53,6 +53,9 @@ func TestThatPropertiesCanBeParsed(t *testing.T) {
             "name": {
                 "type": "string"
             },
+            "zip": {
+                "type": ["string", "null"]
+            },
             "address": {
                 "$ref": "#/definitions/address"
             },
@@ -68,30 +71,41 @@ func TestThatPropertiesCanBeParsed(t *testing.T) {
 	}
 
 	tests := []struct {
-		actual   func() string
-		expected string
+		actual   func() interface{}
+		expected interface{}
 	}{
 		{
-			actual:   func() string { return so.Properties["name"].Type },
-			expected: "string",
+			actual:   func() interface{} { return so.Properties["name"].Type },
+			expected: Type{"string"},
 		},
 		{
-			actual:   func() string { return so.Properties["address"].Type },
-			expected: "",
+			actual:   func() interface{} { return so.Properties["address"].Type },
+			expected: Type{},
 		},
 		{
-			actual:   func() string { return so.Properties["address"].Reference },
+			actual:   func() interface{} { return so.Properties["zip"].Type },
+			expected: Type{"string", "null"},
+		},
+		{
+			actual:   func() interface{} { return so.Properties["address"].Reference },
 			expected: "#/definitions/address",
 		},
 		{
-			actual:   func() string { return so.Properties["status"].Reference },
+			actual:   func() interface{} { return so.Properties["status"].Reference },
 			expected: "#/definitions/status",
 		},
 	}
 
 	for idx, test := range tests {
-		if test.actual() != test.expected {
-			t.Errorf("Expected %s but got %s for test %d", test.expected, test.actual(), idx)
+		switch actual := test.actual().(type) {
+		case Type:
+			if !actual.Is(test.expected) {
+				t.Errorf("Expected %s but got %s for test %d", test.expected, test.actual(), idx)
+			}
+		default:
+			if test.actual() != test.expected {
+				t.Errorf("Expected %s but got %s for test %d", test.expected, test.actual(), idx)
+			}
 		}
 	}
 }
@@ -364,7 +378,7 @@ func TestThatArraysAreSupported(t *testing.T) {
 		t.Errorf("was expecting the Product to have 4 properties, but it had %d", len(ps.Properties))
 	}
 
-	if ps.Properties["tags"].Type != "array" {
+	if !ps.Properties["tags"].Type.Is("array") {
 		t.Errorf("expected the 'Tags' property type to be array, but it was %s", ps.Properties["tags"].Type)
 	}
 }
